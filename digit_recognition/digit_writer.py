@@ -23,7 +23,7 @@ class HandwrittenDigitGUI:
         self.canvas.bind("<B1-Motion>", self.draw)
 
     def setup_buttons(self):
-        self.button_save = Button(self.master, text="Save", command=self.save_and_predict)
+        self.button_save = Button(self.master, text="Predict", command=self.save_and_predict)
         self.button_save.pack(side=tk.LEFT)
         self.button_exit = Button(self.master, text="Exit", command=self.exit_program)
         self.button_exit.pack(side=tk.RIGHT)
@@ -58,12 +58,12 @@ class HandwrittenDigitGUI:
 
         self.canvas.delete("all")
 
-        digit_recognizer = CNN().cuda()
-        digit_recognizer.load_state_dict(torch.load("digit_recognition.pt"))
+        digit_recognizer = CNN()
+        digit_recognizer.load_state_dict(torch.load("digit_recognition.pt", map_location=torch.device('cpu')))
         digit_recognizer.eval()
 
         img = Image.open("handwritten_digit.png")
-        img_tensor = ToTensor()(img).unsqueeze(0).type(torch.float32).cuda()
+        img_tensor = ToTensor()(img).unsqueeze(0).type(torch.float32)
         prediction = digit_recognizer(img_tensor).argmax().item()
 
         self.prediction_label.config(text="The predicted digit is: " + str(prediction))
