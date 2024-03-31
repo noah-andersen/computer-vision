@@ -12,44 +12,59 @@ class HandwrittenDigitGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Handwritten Digit Drawer")
+
+        # Configure colors and fonts
+        self.bg_color = "white"
+        self.button_bg = "#4CAF50"
+        self.button_fg = "white"
+        self.font = ("Helvetica", 12)
+
+        # Configure padding
+        self.padding_x = 10
+        self.padding_y = 5
+
         self.setup_canvas()
         self.setup_buttons()
         self.setup_image()
         self.setup_prediction_label()
+        self.prev_x = None
+        self.prev_y = None
 
     def setup_canvas(self):
         self.canvas = Canvas(self.master, width=280, height=280, bg="black")
-        self.canvas.pack()
+        self.canvas.pack(pady=self.padding_y)
         self.canvas.bind("<B1-Motion>", self.draw)
 
     def setup_buttons(self):
-        self.button_save = Button(self.master, text="Predict", command=self.save_and_predict)
-        self.button_save.pack(side=tk.LEFT)
-        self.button_exit = Button(self.master, text="Exit", command=self.exit_program)
-        self.button_exit.pack(side=tk.RIGHT)
+        button_frame = tk.Frame(self.master, bg=self.bg_color)
+        button_frame.pack(pady=self.padding_y)
+
+        self.button_save = Button(button_frame, text="Predict", command=self.save_and_predict, bg=self.button_bg, fg=self.button_fg)
+        self.button_save.pack(side=tk.LEFT, padx=self.padding_x)
+
+        self.button_exit = Button(button_frame, text="Exit", command=self.exit_program, bg=self.button_bg, fg=self.button_fg)
+        self.button_exit.pack(side=tk.RIGHT, padx=self.padding_x)
 
     def setup_image(self):
         self.image = Image.new("L", (280, 280), "black")
         self.draw_tool = ImageDraw.Draw(self.image)
 
     def setup_prediction_label(self):
-        self.prediction_label = tk.Label(self.master, text="")
+        self.prediction_label = tk.Label(self.master, text="", bg=self.bg_color, font=self.font)
         self.prediction_label.pack()
 
     def draw(self, event):
         x, y = event.x, event.y
-        r = 6
-        self.canvas.create_oval(x-r, y-r, x+r, y+r, fill="white")
-        
-        # Create a new drawing context for each draw action
-        draw_tool = ImageDraw.Draw(self.image)
-        draw_tool.ellipse([x-r, y-r, x+r, y+r], fill="white")
-
+        if self.prev_x and self.prev_y:
+            self.canvas.create_line(self.prev_x, self.prev_y, x, y, fill="white", width=12)
+            self.draw_tool.line([self.prev_x, self.prev_y, x, y], fill="white", width=12)
+        self.prev_x = x
+        self.prev_y = y
 
     def save_and_predict(self):
         filename = "handwritten_digit.png"
         full_path = os.path.abspath(filename)
-        
+
         if os.path.exists(full_path):
             os.remove(filename)
 
@@ -71,7 +86,8 @@ class HandwrittenDigitGUI:
         # Reset the image to a new blank image after prediction
         self.image = Image.new("L", (280, 280), "black")
         self.draw_tool = ImageDraw.Draw(self.image)
-
+        self.prev_x = None
+        self.prev_y = None
 
     def exit_program(self):
         self.master.destroy()
